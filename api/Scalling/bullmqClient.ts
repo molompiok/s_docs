@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 
 dotenv.config(); // Charger les variables d'environnement (si .env est utilisé)
 
-const redisHost = process.env.REDIS_HOST || (process.env.NODE_ENV === 'production'?'':'127.0.0.1');
+const redisHost = process.env.REDIS_HOST ||'127.0.0.1';
 const redisPort = parseInt(process.env.REDIS_PORT || '6379', 10);
 // const redisPassword = process.env.REDIS_PASSWORD;
 
