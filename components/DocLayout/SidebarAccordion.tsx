@@ -49,4 +49,4 @@ const SidebarAccordion: React.FC<SidebarAccordionProps> = ({ title, initialOpen 
     </div>
   );
 };
-export default SidebarAccordion;
+export default SidebarAccordion; 
