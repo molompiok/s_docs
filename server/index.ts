@@ -56,9 +56,6 @@ async function startServer() {
     return res.sendFile(url);
   });
   app.get('*', async (req, res) => {
-    const baseUrl = req.headers['x-base-url'] || ''; // ex. '/ladona2'
-    console.log(req.headers);
-
     const pageContextInit = {
       urlOriginal: req.originalUrl,
       headersOriginal: req.headers
@@ -70,19 +67,6 @@ async function startServer() {
     const { httpResponse } = pageContext
     if (res.writeEarlyHints) res.writeEarlyHints({ link: httpResponse.earlyHints.map((e) => e.earlyHintLink) })
     httpResponse.headers.forEach(([name, value]) => res.setHeader(name, value))
-    if (pageContext.httpResponse) {
-      // Injecter le <base> ou modifier html avant envoi si besoin
-      let html = pageContext.httpResponse.body;
-      if (baseUrl) {
-        // Ajouter <base href="..."> dans le <head> pour faire préfixer les liens relatifs
-        html = html.replace(
-          /<head([^>]*)>/,
-          `<head$1><base href="${baseUrl}">`
-        ).replaceAll('/assets', 'assets');
-      }
-      res.status(pageContext.httpResponse.statusCode).send(html);
-      return;
-    }
     res.status(httpResponse.statusCode)
     // For HTTP streams use pageContext.httpResponse.pipe() instead, see https://vike.dev/streaming
     res.send(httpResponse.body)
@@ -95,21 +79,22 @@ async function startServer() {
   const loadMonitoring = new LoadMonitorService({
     bullmqQueue: getServerQueue(),
     logger: logger,
-    serviceId: SERVICE_ID || 'SERVICE-xxxid',
-    serviceType: 'SERVICE',
+    serviceId: SERVICE_ID || 's_docs',
+    serviceType: 'app',
   });
+
 
   loadMonitoring.startMonitoring()
   const shutdown = async () => {
-    console.log(`[SERVICE Server ${SERVICE_ID}] Arrêt demandé...`);
+    console.log(`[Docs Server ${SERVICE_ID}] Arrêt demandé...`);
     server.close(async () => {
-      console.log(`[SERVICE Server ${SERVICE_ID}] Serveur HTTP fermé.`);
+      console.log(`[Docs Server ${SERVICE_ID}] Serveur HTTP fermé.`);
       await closeQueue(); // Fermer la connexion BullMQ/Redis
       process.exit(0);
-    });
+    }); 
     // Forcer la fermeture après un délai si le serveur ne se ferme pas
     setTimeout(async () => {
-      console.error(`[SERVICE Server ${SERVICE_ID}] Arrêt forcé après timeout.`);
+      console.error(`[Docs Server ${SERVICE_ID}] Arrêt forcé après timeout.`);
       await closeQueue();
       process.exit(1);
     }, 10000); // 10 secondes timeout
@@ -118,5 +103,4 @@ async function startServer() {
   process.on('SIGTERM', shutdown);
   process.on('SIGINT', shutdown);
   console.warn(`Server running at http://localhost:${port}`);
-
 }
